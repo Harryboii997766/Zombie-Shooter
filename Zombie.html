@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Zombie Shooter ULTIMATE</title>
+
+<style>
+body{
+background:black;
+color:white;
+text-align:center;
+font-family:Arial;
+}
+
+#game{
+width:700px;
+height:450px;
+background:#111;
+margin:auto;
+position:relative;
+overflow:hidden;
+cursor:crosshair;
+border:4px solid white;
+}
+
+.zombie{
+width:50px;
+height:50px;
+background:green;
+position:absolute;
+border-radius:8px;
+}
+
+.boss{
+width:90px;
+height:90px;
+background:purple;
+position:absolute;
+border-radius:12px;
+}
+
+.bullet{
+width:8px;
+height:8px;
+background:yellow;
+position:absolute;
+border-radius:50%;
+}
+
+#healthBar{
+width:300px;
+height:25px;
+background:red;
+margin:auto;
+margin-bottom:10px;
+}
+
+#blood{
+position:absolute;
+width:100%;
+height:100%;
+background:red;
+opacity:0;
+pointer-events:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🧟 Zombie Shooter ULTIMATE</h1>
+<h3>Press SPACE for MEGA SHOTGUN 💥</h3>
+
+<div id="healthBar"></div>
+<h2>Score: <span id="score">0</span></h2>
+
+<div id="game">
+<div id="blood"></div>
+</div>
+
+<script>
+
+let game = document.getElementById("game");
+let healthBar = document.getElementById("healthBar");
+let blood = document.getElementById("blood");
+
+let score = 0;
+let health = 100;
+let bullets = [];
+let zombies = [];
+let megaUsed = false;
+
+function spawnZombie(){
+let z = document.createElement("div");
+z.className="zombie";
+z.style.left = Math.random()*650+"px";
+z.style.top = "0px";
+game.appendChild(z);
+zombies.push({el:z, hp:1, speed:2});
+}
+
+function spawnBoss(){
+let z = document.createElement("div");
+z.className="boss";
+z.style.left = Math.random()*610+"px";
+z.style.top = "0px";
+game.appendChild(z);
+zombies.push({el:z, hp:6, speed:1});
+}
+
+setInterval(()=>{
+spawnZombie();
+if(Math.random()<0.25) spawnBoss();
+},1200);
+
+game.addEventListener("click",(e)=>{
+let rect = game.getBoundingClientRect();
+let b = document.createElement("div");
+b.className="bullet";
+b.style.left = (e.clientX-rect.left)+"px";
+b.style.top = "420px";
+game.appendChild(b);
+bullets.push(b);
+});
+
+document.addEventListener("keydown",(e)=>{
+if(e.code==="Space" && !megaUsed){
+megaUsed=true;
+
+// kill all zombies
+zombies.forEach(z=>z.el.remove());
+zombies=[];
+score+=10;
+document.getElementById("score").innerText=score;
+
+// BLOOD SPLAT
+blood.style.opacity=0.6;
+setTimeout(()=>blood.style.opacity=0,300);
+}
+});
+
+function loop(){
+
+// bullets
+bullets.forEach((b,bi)=>{
+let y=parseInt(b.style.top);
+b.style.top=y-10+"px";
+if(y<0){b.remove(); bullets.splice(bi,1);}
+});
+
+// zombies
+zombies.forEach((z,zi)=>{
+let y=parseInt(z.el.style.top);
+z.el.style.top=y+z.speed+"px";
+
+if(y>440){
+health-=10;
+healthBar.style.width=health*3+"px";
+z.el.remove();
+zombies.splice(zi,1);
+
+blood.style.opacity=0.4;
+setTimeout(()=>blood.style.opacity=0,200);
+}
+
+bullets.forEach((b,bi)=>{
+if(
+b.offsetLeft<z.el.offsetLeft+z.el.offsetWidth &&
+b.offsetLeft+8>z.el.offsetLeft &&
+b.offsetTop<z.el.offsetTop+z.el.offsetHeight &&
+b.offsetTop+8>z.el.offsetTop
+){
+z.hp--;
+
+b.remove();
+bullets.splice(bi,1);
+
+if(z.hp<=0){
+score++;
+document.getElementById("score").innerText=score;
+z.el.remove();
+zombies.splice(zi,1);
+}
+}
+});
+
+});
+
+if(health<=0){
+alert("GAME OVER ☠️ Score: "+score);
+location.reload();
+}
+
+requestAnimationFrame(loop);
+}
+
+loop();
+
+</script>
+
+</body>
+</html>
